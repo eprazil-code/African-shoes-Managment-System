@@ -655,7 +655,7 @@
         }
 
         // -------------------------------------------------------------
-        // AUTHENTICATION LOGIC & OVERWRITE / RE-REGISTER PERMISSION
+        // AUTHENTICATION LOGIC & DIRECT FIREBASE REGISTRATION PUSH
         // -------------------------------------------------------------
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('loginForm');
@@ -684,11 +684,19 @@
             const phone = document.getElementById('regPhone').value.trim();
             const password = document.getElementById('regPassword').value;
 
-            // OVERWRITE OLD LOCAL DATA AUTOMATICALLY IF REGISTERING A FRESH ACCOUNT
             const newUser = { role, fullName, username, phone, password, createdAt: new Date().toISOString() };
-            appState.users[username] = newUser;
             
-            syncToOnline(`users/${username}`, newUser);
+            // Push directly to Firebase database to ensure data syncs immediately
+            if(isFirebaseActive && db) {
+                db.ref('users/' + username).set(newUser).then(() => {
+                    console.log("User successfully saved to Firebase.");
+                }).catch(err => {
+                    console.error("Firebase save error:", err);
+                });
+            }
+
+            appState.users[username] = newUser;
+            saveLocalState();
             localStorage.setItem(SESSION_KEY, JSON.stringify({ username }));
             currentUser = newUser;
 
@@ -703,7 +711,7 @@
 
             const user = appState.users[username];
             if(!user || user.password !== password) {
-                alert('Username au Password sio sahihi! Kama ni mpya hakikisha umejisajili kwanza.');
+                alert('Username au Password sio sahihi! Hakikisha umejisajili kwanza.');
                 return;
             }
 
