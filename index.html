@@ -378,7 +378,7 @@
                             <i class="fa-solid fa-truck-arrow-right"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-black text-white">Fomu ya CEO: Tuma Mzigo Mpya Kiwandani &rarr; Dukani</h3>
+                            <h3 class="text-lg font-black text-white">Fomu ya CEO: Tuma Mzigo Mpya Kiwandani $\rightarrow$ Dukani</h3>
                             <p class="text-xs text-slate-400">Jaza pair na aina za viatu vilivyotengenezwa kiwandani na kutumwa dukani</p>
                         </div>
                     </div>
@@ -651,7 +651,7 @@
         }
 
         // -------------------------------------------------------------
-        // AUTHENTICATION LOGIC & SAFE REGISTRATION
+        // AUTHENTICATION LOGIC & CUSTOM WELCOME MESSAGE UPON REGISTRATION
         // -------------------------------------------------------------
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('loginForm');
@@ -688,21 +688,25 @@
 
                 const newUser = { role, fullName, username, phone, password, createdAt: new Date().toISOString() };
 
-                // Hifadhi kwenye local kwanza isikwame
+                // Hifadhi kwenye local database kwanza
                 appState.users[username] = newUser;
                 saveLocalState();
-                localStorage.setItem(SESSION_KEY, JSON.stringify({ username }));
-                currentUser = newUser;
 
-                // Tuma Firebase kwa nyuma kama ipo
+                // Tuma Firebase kwa nyuma
                 if(isFirebaseActive && db) {
                     db.ref('users/' + username).set(newUser).catch(err => {
                         console.warn("Firebase background sync warning:", err);
                     });
                 }
 
-                alert('Umejisajili kikamilifu!');
-                showDashboard();
+                // Onyesha ujumbe maalumu wa kumkaribisha kwa jina na cheo chake, kisha mpeleke kwenye ukurasa wa Login
+                alert(`Karibu African Shoes, ${fullName} (${role})! Akaunti yako imesajiliwa kikamilifu. Sasa tafadhali ingia (Login) na username na password yako.`);
+                
+                // Reset fomu na nenda kwenye tab ya login huku ukiweka username yake tayari kwenye input ya login
+                document.getElementById('registerForm').reset();
+                switchAuthTab('login');
+                document.getElementById('loginUsername').value = username;
+
             } catch (err) {
                 console.error("Register error:", err);
                 alert('Kumetokea tatizo wakati wa kujisajili. Jaribu tena.');
