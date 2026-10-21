@@ -655,7 +655,7 @@
         }
 
         // -------------------------------------------------------------
-        // AUTHENTICATION LOGIC & ROLE CHANGE
+        // AUTHENTICATION LOGIC & OVERWRITE / RE-REGISTER PERMISSION
         // -------------------------------------------------------------
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('loginForm');
@@ -684,11 +684,7 @@
             const phone = document.getElementById('regPhone').value.trim();
             const password = document.getElementById('regPassword').value;
 
-            if(appState.users[username]) {
-                alert('Username hii tayari imeshasajiliwa! Tafadhali tumia username nyingine au ingia.');
-                return;
-            }
-
+            // OVERWRITE OLD LOCAL DATA AUTOMATICALLY IF REGISTERING A FRESH ACCOUNT
             const newUser = { role, fullName, username, phone, password, createdAt: new Date().toISOString() };
             appState.users[username] = newUser;
             
@@ -696,7 +692,7 @@
             localStorage.setItem(SESSION_KEY, JSON.stringify({ username }));
             currentUser = newUser;
 
-            alert('Umejisajili kikamilifu!');
+            alert('Umejisajili kikamilifu mtandaoni!');
             showDashboard();
         }
 
@@ -707,7 +703,7 @@
 
             const user = appState.users[username];
             if(!user || user.password !== password) {
-                alert('Username au Password sio sahihi!');
+                alert('Username au Password sio sahihi! Kama ni mpya hakikisha umejisajili kwanza.');
                 return;
             }
 
