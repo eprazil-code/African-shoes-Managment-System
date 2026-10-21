@@ -192,7 +192,6 @@
                     </div>
 
                     <div id="pendingShipmentsList" class="space-y-3">
-                        <!-- Dynamic Pending Shipments -->
                         <p class="text-xs text-slate-400 italic">Hakuna mzigo mpya unaosubiri kuthibitishwa kwa sasa.</p>
                     </div>
                 </div>
@@ -266,7 +265,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="storeStockTableBody" class="divide-y divide-slate-700/50">
-                                    <!-- Dynamic Store Stock -->
                                 </tbody>
                             </table>
                         </div>
@@ -306,7 +304,6 @@
                                 </tr>
                             </thead>
                             <tbody id="sellerSalesLogBody" class="divide-y divide-slate-700/50">
-                                <!-- Dynamic Sales Log -->
                             </tbody>
                         </table>
                     </div>
@@ -381,7 +378,7 @@
                             <i class="fa-solid fa-truck-arrow-right"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-black text-white">Fomu ya CEO: Tuma Mzigo Mpya Kiwandani $\rightarrow$ Dukani</h3>
+                            <h3 class="text-lg font-black text-white">Fomu ya CEO: Tuma Mzigo Mpya Kiwandani &rarr; Dukani</h3>
                             <p class="text-xs text-slate-400">Jaza pair na aina za viatu vilivyotengenezwa kiwandani na kutumwa dukani</p>
                         </div>
                     </div>
@@ -448,7 +445,6 @@
                                 </tr>
                             </thead>
                             <tbody id="reconciliationTableBody" class="divide-y divide-slate-700/50">
-                                <!-- Dynamic Reconciliation Data -->
                             </tbody>
                         </table>
                     </div>
@@ -655,7 +651,7 @@
         }
 
         // -------------------------------------------------------------
-        // AUTHENTICATION LOGIC & DIRECT FIREBASE REGISTRATION PUSH
+        // AUTHENTICATION LOGIC & SAFE REGISTRATION
         // -------------------------------------------------------------
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('loginForm');
@@ -678,30 +674,39 @@
 
         function handleRegister(e) {
             e.preventDefault();
-            const role = document.getElementById('regRole').value;
-            const fullName = document.getElementById('regFullName').value.trim();
-            const username = document.getElementById('regUsername').value.trim().toLowerCase();
-            const phone = document.getElementById('regPhone').value.trim();
-            const password = document.getElementById('regPassword').value;
+            try {
+                const role = document.getElementById('regRole').value;
+                const fullName = document.getElementById('regFullName').value.trim();
+                const username = document.getElementById('regUsername').value.trim().toLowerCase();
+                const phone = document.getElementById('regPhone').value.trim();
+                const password = document.getElementById('regPassword').value;
 
-            const newUser = { role, fullName, username, phone, password, createdAt: new Date().toISOString() };
-            
-            // Push directly to Firebase database to ensure data syncs immediately
-            if(isFirebaseActive && db) {
-                db.ref('users/' + username).set(newUser).then(() => {
-                    console.log("User successfully saved to Firebase.");
-                }).catch(err => {
-                    console.error("Firebase save error:", err);
-                });
+                if (!role || !fullName || !username || !phone || !password) {
+                    alert('Tafadhali jaza taarifa zote!');
+                    return;
+                }
+
+                const newUser = { role, fullName, username, phone, password, createdAt: new Date().toISOString() };
+
+                // Hifadhi kwenye local kwanza isikwame
+                appState.users[username] = newUser;
+                saveLocalState();
+                localStorage.setItem(SESSION_KEY, JSON.stringify({ username }));
+                currentUser = newUser;
+
+                // Tuma Firebase kwa nyuma kama ipo
+                if(isFirebaseActive && db) {
+                    db.ref('users/' + username).set(newUser).catch(err => {
+                        console.warn("Firebase background sync warning:", err);
+                    });
+                }
+
+                alert('Umejisajili kikamilifu!');
+                showDashboard();
+            } catch (err) {
+                console.error("Register error:", err);
+                alert('Kumetokea tatizo wakati wa kujisajili. Jaribu tena.');
             }
-
-            appState.users[username] = newUser;
-            saveLocalState();
-            localStorage.setItem(SESSION_KEY, JSON.stringify({ username }));
-            currentUser = newUser;
-
-            alert('Umejisajili kikamilifu mtandaoni!');
-            showDashboard();
         }
 
         function handleLogin(e) {
@@ -791,7 +796,6 @@
             document.getElementById('dashboardSection').classList.remove('hidden');
             document.getElementById('mainHeader').classList.remove('hidden');
 
-            // Set Header Info
             document.getElementById('headerUserName').innerText = currentUser.fullName;
             document.getElementById('headerUserPhone').innerText = currentUser.phone;
             
@@ -865,7 +869,6 @@
         function calculateActiveStoreInventory() {
             const inventory = {};
 
-            // Add Received Shipments
             appState.shipments.filter(s => s.status === 'RECEIVED').forEach(s => {
                 const key = `${s.shoeName.toUpperCase()} (Size ${s.shoeSize})`;
                 if(!inventory[key]) {
@@ -874,7 +877,6 @@
                 inventory[key].totalReceived += s.pairsDispatched;
             });
 
-            // Deduct Sales
             appState.sales.forEach(sale => {
                 const key = `${sale.shoeName.toUpperCase()} (Size ${sale.shoeSize})`;
                 if(inventory[key]) {
@@ -882,7 +884,6 @@
                 }
             });
 
-            // Calculate Remaining
             Object.keys(inventory).forEach(k => {
                 inventory[k].remaining = inventory[k].totalReceived - inventory[k].totalSold;
             });
