@@ -487,10 +487,10 @@
         document.getElementById('yearSpan').innerText = new Date().getFullYear();
 
         // -------------------------------------------------------------
-        // FIREBASE INITIALIZATION FOR REAL-TIME MULTI-DEVICE SYNC
+        // FIREBASE INITIALIZATION WITH YOUR EXACT REALTIME DATABASE URL
         // -------------------------------------------------------------
         const firebaseConfig = {
-            databaseURL: "https://african-shoes-default-rtdb.firebaseio.com"
+            databaseURL: "https://african-shoes-managment-system-default-rtdb.firebaseio.com/"
         };
 
         let db = null;
@@ -744,7 +744,7 @@
                 shoeName,
                 shoeSize,
                 pairsDispatched: pairs,
-                status: 'PENDING', // PENDING -> RECEIVED
+                status: 'PENDING',
                 dispatchedAt: new Date().toISOString(),
                 dispatchedBy: currentUser.fullName
             };
@@ -774,7 +774,6 @@
         // SALES LOGIC & INVENTORY AUTOMATION
         // -------------------------------------------------------------
         function calculateActiveStoreInventory() {
-            // Group by shoeName + size
             const inventory = {};
 
             // Add Received Shipments
@@ -909,7 +908,6 @@
                 totalActivePairs += item.remaining;
 
                 if(item.remaining > 0) {
-                    // Populate Form Select
                     const opt = document.createElement('option');
                     opt.value = key;
                     opt.innerText = `${item.shoeName} (Size ${item.shoeSize}) - Zimebaki ${item.remaining} Pair`;
@@ -963,19 +961,16 @@
                 const saleDate = new Date(sale.soldAt);
                 const saleDateStr = sale.soldAt.split('T')[0];
 
-                // Daily
                 if(saleDateStr === todayStr) {
                     dailyAmount += sale.totalAmount;
                     dailyPairs += sale.pairsSold;
                 }
 
-                // Weekly
                 if(saleDate >= startOfWeek) {
                     weeklyAmount += sale.totalAmount;
                     weeklyPairs += sale.pairsSold;
                 }
 
-                // Monthly
                 if(saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear()) {
                     monthlyAmount += sale.totalAmount;
                     monthlyPairs += sale.pairsSold;
@@ -1004,7 +999,6 @@
         function renderReconciliationTable() {
             const tbody = document.getElementById('reconciliationTableBody');
             
-            // Map items by ShoeName + Size
             const recon = {};
 
             appState.shipments.forEach(s => {
@@ -1077,7 +1071,6 @@
                 for(let i=3; i>=0; i--) {
                     labels.push(`Wiki -${i}`);
                     let sum = 0;
-                    // Mock calculation for weekly buckets
                     appState.sales.forEach(s => sum += (s.totalAmount / 4));
                     data.push(Math.round(sum));
                 }
